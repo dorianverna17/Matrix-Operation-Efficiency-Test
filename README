@@ -1,0 +1,129 @@
+Verna Dorian-Alexandru 334CC
+Tema 2 ASC
+
+Organizare:
+
+-> Am urmat urmatorii pasi in implementare:
+    - am implementat varianta neoptimizata
+    - am implementat varianta blas
+    - am reluat laboratorul cu tehnici de optimizare
+    - am implementat varianta optimizata
+    - am creat fisierele .memory
+    - am creat fisierele .cache
+    - am creat graficele
+
+-> Abordare generala:
+    - Varianta neoptimizata: am realizat intai o functie
+    care sa transpuna o matrice normala. Aceasta functie
+    (transpose_matrix) am folosit-o pentru a transpune B.
+    Apoi am implementat o functie care imi transpune o
+    matrice superior triunghiulara. Practic, aceasta este
+    tot functia de dinainte, doar ca nu mai iau in
+    considerare zero-urile (transpose_triangular_matrix).
+    Ambele functii imi returneaza o nou matrice.
+    Apoi am implementat trei functii de multiply pentru
+    matrici: una pentru cazul in care la dreapta inmultesc
+    cu o matrice superior triungiulara (B * A), una pentru
+    cazul in care la dreapta inmultesc cu o matrice inferior
+    triunghiulara (B * A * At), una in care fac o inmultire
+    normala de matrice (Bt * B). In primele doua cazuri, nu
+    mai iterez prin valorile de zero din matrice. Apoi am
+    realizat o functie care imi aduna doua matrice pentru
+    a completa toata operatia. In functia main apelez aceste
+    functii conform operatiei care trebuie realizata.
+    - Varianta blas: Aici am folosit initial functia
+    cblas_dgemm pentru a efectua inmultirile de matrice.
+    Foloseam aceasta functie de 3 ori (odata pentru a
+    calcula B * A, dupa care pentru a calcula Bt * B si mai
+    apoi pentru a obtine rezultatul final). Dupa aceea
+    mi-am dat seama ca nu tineam cont ca A este superior
+    triunghiulara si am ales sa folosesc de doua ori functia
+    cblas_dtrmm si o data functia cblas_dgemm. Pe C il
+    initializez cu valorile din B (memcpy), si retin in el
+    B * A * At. Apoi obtin rezultatul final cand fac dgemm
+    pentru Bt * B. C este rezultatul returnat.
+    - Varianta opt_m: Aici am facut modificari la functiile
+    care realizau inmultirea de matrice. In primul rand am
+    folosit register double pentru a retine rezultatul pentru
+    un anumit element (acea suma care trebuie creata). Apoi
+    am folosit pointeri pentru a accesa elementele din
+    matricele care se inmulteau (aici m-am folosit de modelul
+    dat in laboratorul 5 la sectiunea "Accesul la vectori").
+    Am folosit si loop unrolling in functii, dar nu mi-a
+    scazut foarte mult timpul. Totodata am renuntat la
+    alocarea altor vectori, de exemplu in functia de adunare
+    a matricelor, deoarece nu mai era necesar sa aloc niste
+    bytes daca puteam sa fac modificarile inplace.
+    - cachegrind: 
+	* Valorile obtinute:
+		Aceste valori consta in numarul de I cache read-uri realizate (I refs),
+		adica numarul de instructiuni executate, numarul de D cache read-uri si
+		write-uri (D refs), adica numarul de citiri/scriere din/in memorie. De
+		asemenea, mai avem si numarul de branch-uri care au fost executate si
+		care au fost mispredicted. Ca si valori numerice, putem observa ca
+		in varianta neoptimizata avem cele mai mari valori. Numarul de instructiuni
+		executate este de aproximativ 24 de ori mai mare decat in cazul variantei
+		blas, unde se folosesc rutinele blas. Pe de alta parte, se inregistreaza
+		si o eficienta mai mare in varianta blas din punct de vedere al
+		scrierilor/citirilor din memorie adunate (aproximativ de 33 de ori mai putine
+		decat in varianta neoptimizata). O valoare similara (~30), se obtine si
+		din punct de vedere al branch-urilor. Varianta neoptimizata se situeaza intre
+		cele doua variante prezentate anterior ca si performanta. Varianta blas
+		este cea mai buna (si ca timp, dar si ca numar instructiuni, scrieri & citiri
+		si branch-uri executate). Varianta optimizata este de aproape 3 ori mai buna
+		din punct de vedere al instructiunilor executate decat varianta neoptimizata,
+		de aproape 4 ori mai buna din punct de vedere al numarului de scrieri si
+		citiri din memorie. Cu toate acestea, numarul de branchuri executate ramane
+		aproximativ la fel (nu s-au facut optimizari mari in acest sens).
+	* Efectul optimizarilor facute:
+		S-a redus numarul de citiri/scrieri din memorie cu ajutorul folosirii
+		unor variabile register double. In acest fel, accesul la memorie se reduce
+		la accesarea unui registru. De asemenea, reducerea numarului de instructiuni
+		facute a fost datorat si renuntarii la alocarea unor buffere intermediare
+		pentru matrice (de exemplu pentru a retine rezultatul adunarii a doua matrice)
+		si prin aplicarea ideii de loop unrolling in cateva situatii.
+    - analiza performantei:
+	Din punct de vedere al graficelor, se poate observa ca de la 800 de elem incolo, panta devine
+	oarecum constanta in cazul variantei blas, proportia dintre timp si numarul de elemente
+	ramanand aproape aceeasi. La varianta neoptimizata insa, se executa mai multe
+	instructiuni, iar proportia creste mai mult in timp. La varianta optimizata se observa cam
+	acelasi comportament dar de data aceasta se observa o crestere mai inceata a timpului
+        pe ultima portiune din grafic comparativ cu varianta neoptimizata, lucru sugerat si de
+        performanta obtinuta in cadrul analizei cu cachegrind.
+    - comentarii: in general am incercat ca pe masura
+    ce implementez sa pun comentarii in cod (sper ca
+    se intelege ce am vrut sa zic in ele) pentru ca
+    imi e mai usor si mie daca fac asta
+
+
+-> Utilitate tema:
+    - Tema a fost destul de utila, mi-a placut pentru ca
+    am avut ocazia sa mai invat lucruri pe care nu am apucat
+    sa le inteleg in totalitate la laborator. Cu ocazia
+    temei a trebuit sa trec in revista si anumite elemente
+    studiate la laborator si de optimizare:))
+
+-> Consider implementarea mea ca este ok, nu pot spune ca a
+    fost neaparat naiva, dar nici ca a fost cea mai eficienta.
+    Un lucru care cred ca ar fi fost posibil mai eficient ar
+    fi fost sa nu mai realizez transpusa in cadrul unei functii
+    si sa il retin in alt buffer.
+-> Am intalnit probleme la implementarea variantei blas. In prima
+    faza nu imi mergea Makefile-ul si nu imi gasea functia dgemm,
+    dar mi-am dat seama usor usor ce trebuia sa pun in Makefile.
+    De asemenea, mi s-au parut putin ciudati si parametrii care
+    trebuiau dati functiilor, dar incet incet am i-am dat de cap.
+    Mi se pare cam slabut documentata partea de blas.
+
+Implementare:
+-> Consider ca am implementat intreg-ul enunt al temei
+-> Nu consider ca exista functionalitati lipsa
+
+Resurse utilizate
+https://ocw.cs.pub.ro/courses/asc/laboratoare/05
+
+
+Nu am un link pt repo-ul de git, nu am folosit versionare
+
+Verna Dorian-Alexandru 334CC
+Tema 2 ASC
